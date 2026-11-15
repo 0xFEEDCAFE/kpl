@@ -45,7 +45,8 @@ export function createClientIdentity(networkKit: NetworkKit, sendRequest: AwaitR
 
 			if (data.provider === 'anonymous') {
 				const playerIndentity = tryReviveAnonymousPlayer(data.user_id, data.user_token) || createAnonymousPlayer();
-				const image = `https://api.dicebear.com/9.x/dylan/svg?mood=happy,hopeful,superHappy&seed=${data.username}`;
+				// Empty: the client generates the avatar locally from the username.
+				const image = '';
 				player = createPlayer(data.username, playerIndentity.user_id, image, networkKit);
 
 				if (!player) {

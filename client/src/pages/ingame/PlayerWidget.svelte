@@ -1,11 +1,15 @@
 <script lang="ts">
 	export let name: string | undefined = undefined;
 	export let image: string | undefined = undefined;
+
+	import { avatarFor } from "../../lib/avatar";
+
+	$: src = image || (name ? avatarFor(name) : undefined);
 </script>
 
 <div class="player-widget">
-	{#if image}
-		<img class="player-widget__image" src={image} alt={name} draggable="false" referrerpolicy="no-referrer" />
+	{#if src}
+		<img class="player-widget__image" {src} alt={name} draggable="false" referrerpolicy="no-referrer" />
 	{:else}
 		<div class="player-widget__image player-widget__image--placeholder">{'?'}</div>
 	{/if}

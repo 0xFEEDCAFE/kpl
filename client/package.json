@@ -19,6 +19,9 @@
     "vite": "^5.3.4"
   },
   "dependencies": {
+    "@dicebear/collection": "^9.4.2",
+    "@dicebear/core": "^9.4.3",
+    "@fontsource/poppins": "^5.3.0",
     "@paralleldrive/cuid2": "^2.2.2",
     "balloon-css": "^1.2.0",
     "cookiejs": "^2.1.3",

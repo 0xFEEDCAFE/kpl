@@ -4,6 +4,7 @@
 	import { IngameRoom, RoomState } from "../../../lib/networking/room";
 	import { scoreSorter } from "../../../lib/score-sorter";
 	import { specialUsers } from "../../../lib/special-users";
+	import { avatarFor } from "../../../lib/avatar";
 
 
 	// TODO: Allow host to kick players
@@ -11,7 +12,7 @@
 <div class="players">
 	{#each ($IngameRoom?.players ?? []).sort(scoreSorter($PlayerIdentity?.uuid || '')) as player (player.uuid)}
 		<div class="player" animate:flip={{ duration: 500 }}>
-			<img class="player__avatar" src={player.image} alt={player.username} draggable="false" referrerpolicy="no-referrer" />
+			<img class="player__avatar" src={player.image || avatarFor(player.username)} alt={player.username} draggable="false" referrerpolicy="no-referrer" />
 			<div class="player__name">
 				<div class="role">
 					{#if player.isCzar && $IngameRoom?.state !== RoomState.LOBBY}
