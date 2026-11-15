@@ -91,6 +91,7 @@ Create a site configuration, for example `/etc/nginx/sites-available/kpl.example
 ```nginx
 server {
     listen 80;
+    listen [::]:80;
     server_name kpl.example.com;
 
     location / {
@@ -119,6 +120,8 @@ sudo certbot --nginx -d kpl.example.com
 ```
 
 Certbot adds the `listen 443 ssl` settings and an HTTP-to-HTTPS redirect to the file.
+
+Keep both `listen` lines. If the domain has an IPv6 (AAAA) DNS record, Let's Encrypt may check it over IPv6. Without `listen [::]:80`, IPv6 requests go to a different nginx site, and the certificate request fails with a 404 error. After certbot runs, check that the 443 block also has `listen [::]:443 ssl;`.
 
 Two settings in the `/ws` block are required:
 
