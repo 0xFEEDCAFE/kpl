@@ -26,6 +26,8 @@ Database data is kept in the `db-data` volume, so it survives restarts and rebui
 
 ## Quick start (local)
 
+First create the `.env` file (see [Configuration](#configuration)). Docker Compose refuses to start without it. Then run:
+
 ```sh
 docker compose up -d --build
 docker compose exec server npm run legacy-card-import
@@ -37,7 +39,7 @@ The second command loads the original card decks into the empty database. Run it
 
 ## Configuration
 
-Put the settings in a `.env` file next to `docker-compose.yml`. Docker Compose reads it automatically. Do not commit this file.
+Put the settings in a `.env` file next to `docker-compose.yml`. Start by copying the template: `cp .env.example .env`. Docker Compose reads it automatically. Do not commit this file (it is in `.gitignore`). All three variables are required. There are no defaults: if one is missing, Docker Compose stops with an error.
 
 ```env
 MYSQL_ROOT_PASSWORD=choose-a-strong-password
@@ -45,13 +47,13 @@ MYSQL_PASSWORD=choose-another-strong-password
 VITE_SERVER_URL=ws://localhost:3001
 ```
 
-| Variable              | Default               | Purpose |
-|-----------------------|-----------------------|---------|
-| `MYSQL_ROOT_PASSWORD` | `change-me-root`      | MySQL root password. |
-| `MYSQL_PASSWORD`      | `change-me`           | Password of the `kpl` database user. The server uses it too. Letters and digits only (see [Password rules](#password-rules)). |
-| `VITE_SERVER_URL`     | `ws://localhost:3001` | WebSocket address of the game server, as the player's browser sees it. |
+| Variable              | Purpose |
+|-----------------------|---------|
+| `MYSQL_ROOT_PASSWORD` | MySQL root password. |
+| `MYSQL_PASSWORD`      | Password of the `kpl` database user. The server uses it too. Letters and digits only (see [Password rules](#password-rules)). |
+| `VITE_SERVER_URL`     | WebSocket address of the game server, as the player's browser sees it. Use `ws://localhost:3001` for local use. |
 
-Always change the passwords before you deploy to a public server.
+Use strong, unique passwords, especially on a public server.
 
 ### Password rules
 

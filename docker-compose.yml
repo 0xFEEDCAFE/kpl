@@ -3,14 +3,17 @@ services:
     image: mysql:8.4
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-change-me-root}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env (see DEPLOYMENT.md)}
       MYSQL_DATABASE: kpl
       MYSQL_USER: kpl
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-change-me}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env (see DEPLOYMENT.md)}
     volumes:
       - db-data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      # Use TCP (127.0.0.1), not the Unix socket: during first-time initialization MySQL
+      # runs a temporary server with networking disabled, which must not count as healthy.
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1"]
+      start_period: 120s
       interval: 5s
       timeout: 5s
       retries: 20
@@ -22,8 +25,10 @@ services:
       db:
         condition: service_healthy
     environment:
-      DATABASE_URL: mysql://kpl:${MYSQL_PASSWORD:-change-me}@db:3306/kpl
+      DATABASE_URL: mysql://kpl:${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env (see DEPLOYMENT.md)}@db:3306/kpl
       SERVER_PORT: 3001
+    # Run a minimal init as PID 1 so SIGTERM reaches the Node process on stop/restart
+    init: true
     # Ports are bound to localhost only; use a reverse proxy for public access (see DEPLOYMENT.md)
     ports:
       - "127.0.0.1:3001:3001"
@@ -35,7 +40,7 @@ services:
     build:
       context: ./client
       args:
-        VITE_SERVER_URL: ${VITE_SERVER_URL:-ws://localhost:3001}
+        VITE_SERVER_URL: ${VITE_SERVER_URL:?Set VITE_SERVER_URL in .env (see DEPLOYMENT.md)}
     restart: unless-stopped
     depends_on:
       - server

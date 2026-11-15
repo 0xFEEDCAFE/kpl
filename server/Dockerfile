@@ -17,5 +17,6 @@ RUN npx prisma generate
 ENV SERVER_PORT=3001
 EXPOSE 3001
 
-# Apply pending migrations, then start the WebSocket server
-CMD ["sh", "-c", "npx prisma migrate deploy && npx tsx src/index.ts"]
+# Apply pending migrations, then start the WebSocket server.
+# `exec` replaces the shell so stop signals reach tsx/node instead of stopping at sh.
+CMD ["sh", "-c", "npx prisma migrate deploy && exec ./node_modules/.bin/tsx src/index.ts"]
