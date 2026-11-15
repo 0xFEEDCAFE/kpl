@@ -16,7 +16,7 @@ export type AuthCredentials = {
 	user_token: string;
 };
 
-const SERVER_URL = cookie.get('server-ip') ||  (import.meta.env.MODE === 'development' ? 'ws://localhost:3001' : 'wss://kpl-backend.by-sh.eu/'); // TODO: Load from env or let user specify
+const SERVER_URL = cookie.get('server-ip') || import.meta.env.VITE_SERVER_URL || (import.meta.env.MODE === 'development' ? 'ws://localhost:3001' : 'wss://kpl-backend.by-sh.eu/');
 
 let connection: WebSocket | null = null;
 let authCredentials: AuthCredentials | null = null;

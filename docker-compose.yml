@@ -1,0 +1,51 @@
+services:
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env (see DEPLOYMENT.md)}
+      MYSQL_DATABASE: kpl
+      MYSQL_USER: kpl
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env (see DEPLOYMENT.md)}
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      # Use TCP (127.0.0.1), not the Unix socket: during first-time initialization MySQL
+      # runs a temporary server with networking disabled, which must not count as healthy.
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1"]
+      start_period: 120s
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  server:
+    build: ./server
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # The server builds DATABASE_URL from this and percent-encodes it (src/database-url.ts)
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env (see DEPLOYMENT.md)}
+    # Run a minimal init as PID 1 so SIGTERM reaches the Node process on stop/restart
+    init: true
+    # Ports are bound to localhost only; use a reverse proxy for public access (see DEPLOYMENT.md)
+    ports:
+      - "127.0.0.1:3001:3001"
+    # Keep stdin open so the admin CLI (motd, room list, player kick...) works via `docker attach`.
+    # No tty: logs stay free of terminal control codes. Attach with --sig-proxy=false (see DEPLOYMENT.md).
+    stdin_open: true
+
+  client:
+    build:
+      context: ./client
+      args:
+        VITE_SERVER_URL: ${VITE_SERVER_URL:?Set VITE_SERVER_URL in .env (see DEPLOYMENT.md)}
+    restart: unless-stopped
+    depends_on:
+      - server
+    ports:
+      - "127.0.0.1:8080:80"
+
+volumes:
+  db-data:

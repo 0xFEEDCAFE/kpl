@@ -1,5 +1,7 @@
 import { CardDeck, PrismaClient } from "@prisma/client";
+import { ensureDatabaseUrl } from "./database-url.js";
 
+ensureDatabaseUrl();
 export const db = new PrismaClient();
 
 type CardDeckWithCounts = CardDeck & {
