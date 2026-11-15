@@ -50,22 +50,22 @@ VITE_SERVER_URL=ws://localhost:3001
 | Variable              | Purpose |
 |-----------------------|---------|
 | `MYSQL_ROOT_PASSWORD` | MySQL root password. |
-| `MYSQL_PASSWORD`      | Password of the `kpl` database user. The server uses it too. Letters and digits only (see [Password rules](#password-rules)). |
+| `MYSQL_PASSWORD`      | Password of the `kpl` database user. The server uses it too (see [Password rules](#password-rules)). |
 | `VITE_SERVER_URL`     | WebSocket address of the game server, as the player's browser sees it. Use `ws://localhost:3001` for local use. |
 
 Use strong, unique passwords, especially on a public server.
 
 ### Password rules
 
-Use only letters and digits in `MYSQL_PASSWORD`. To generate a strong password:
+To generate a strong password:
 
 ```sh
 openssl rand -hex 24
 ```
 
-The server connects with the URL `mysql://kpl:<MYSQL_PASSWORD>@db:3306/kpl`, so the password becomes part of a URL. Characters such as `/`, `#`, `?`, `@`, `:` and `%` break the URL. The server then fails at startup with `P1001: Can't reach database server`, usually with a wrong host name. URL-encoding the password does not help, because the same variable also sets the password inside MySQL.
+The server percent-encodes the password when it builds its database URL, so any character works. Do not URL-encode it yourself.
 
-Also avoid `$` in any value in `.env`. Docker Compose reads `$` as the start of a variable name.
+In `.env`, Docker Compose treats some characters specially: `$` starts a variable name, and ` #` starts a comment. If a value contains these or spaces, wrap it in single quotes. Compose then reads it literally: `MYSQL_PASSWORD='p@ss$word #1'`. A single-quoted value cannot contain a single quote.
 
 ### Important: `VITE_SERVER_URL` is set at build time
 
@@ -231,16 +231,15 @@ The game server reads admin commands from its console:
 To open the console:
 
 ```sh
-docker attach kpl-fork-server-1
+docker attach --sig-proxy=false $(docker compose ps -q server)
 ```
 
-The container name comes from the folder name. Check it with `docker compose ps`. To leave the console without stopping the server, press **Ctrl+P**, then **Ctrl+Q**. Ctrl+C stops the server.
+Type a command and press Enter. There is no prompt. Press **Ctrl+C** to leave the console. With `--sig-proxy=false`, Ctrl+C only detaches and the server keeps running. Without that option, Ctrl+C stops the server and every room is lost.
 
 ## Troubleshooting
 
 - **The page loads, but the game cannot connect.** Check that `VITE_SERVER_URL` points to an address the browser can reach, that it uses `wss://` when the page uses HTTPS, and that you rebuilt the client after changing it. The browser's developer console shows the WebSocket error.
 - **The server restarts again and again.** Run `docker compose logs server`.
-  - `P1001: Can't reach database server`, often with a wrong host name such as `kpl:3306` instead of `db:3306`: the password contains a character that breaks the database URL (see [Password rules](#password-rules)).
   - `P1000: Authentication failed`: the password in `.env` does not match the password stored in the database (see [Changing the database password later](#changing-the-database-password-later)).
 - **The game page loads, but the WebSocket connection fails with error 502.** The reverse proxy cannot reach the game server. Check that the `server` container is running (`docker compose ps`) and that the proxy points to its port.
 - **No card decks appear when creating a room.** The database is empty. Run the card import (see [Quick start](#quick-start-local)).

@@ -1,5 +1,6 @@
 import { Card, PrismaClient } from '@prisma/client';
 import fs from 'fs';
+import { ensureDatabaseUrl } from '../src/database-url.js';
 
 
 type LegacyBlackCard = {
@@ -66,6 +67,7 @@ async function importCards() {
 	});
 
 
+	ensureDatabaseUrl();
 	const db = new PrismaClient();
 	await db.$transaction([
 		db.cardDeck.create({

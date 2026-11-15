@@ -13,7 +13,7 @@ ARG VITE_SERVER_URL
 RUN test -n "$VITE_SERVER_URL" || { echo "VITE_SERVER_URL build arg is required" >&2; exit 1; }
 ENV VITE_SERVER_URL=$VITE_SERVER_URL
 
-RUN npx vite build
+RUN npm run build
 
 FROM nginx:1.27-alpine
 COPY nginx.conf /etc/nginx/conf.d/default.conf

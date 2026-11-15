@@ -19,4 +19,4 @@ EXPOSE 3001
 
 # Apply pending migrations, then start the WebSocket server.
 # `exec` replaces the shell so stop signals reach tsx/node instead of stopping at sh.
-CMD ["sh", "-c", "npx prisma migrate deploy && exec ./node_modules/.bin/tsx src/index.ts"]
+CMD ["sh", "-c", "./node_modules/.bin/tsx src/migrate.ts && exec ./node_modules/.bin/tsx src/index.ts"]
