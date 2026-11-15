@@ -35,7 +35,13 @@ docker compose exec server node dist/legacy/inport-legacy-cards.js
 
 Then open http://localhost:8080.
 
-The second command loads the original card decks into the empty database. Run it **only once**. It does not check for existing decks, so a second run creates duplicate copies.
+The second command loads the original card decks into the database. It is safe to run again: decks that already exist are skipped. To replace the existing decks with a fresh copy, for example after the card files change, add `--force`:
+
+```sh
+docker compose exec server node dist/legacy/inport-legacy-cards.js --force
+```
+
+`--force` deletes the imported decks with all their cards and imports them again. This also removes duplicate copies made by older versions of the import. Decks created by players are not touched. Run it when nobody is playing: the new decks get new ids, so a room that selected the old decks but has not started its game yet finds no cards in them.
 
 ## Configuration
 

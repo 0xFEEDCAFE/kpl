@@ -95,7 +95,7 @@ The client's development build connects to `ws://localhost:3001`, so set `SERVER
 
 ```sh
 pnpm run migrate             # create the database tables
-pnpm run legacy-card-import  # load the card decks (once)
+pnpm run legacy-card-import  # load the card decks (skips existing; add --force to replace them)
 pnpm run dev                 # start the server, restarts on file changes
 ```
 
