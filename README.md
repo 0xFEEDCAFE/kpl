@@ -66,7 +66,7 @@ The easiest way to run the game is Docker Compose:
 
 ```sh
 docker compose up -d --build
-docker compose exec server npm run legacy-card-import
+docker compose exec server node dist/legacy/inport-legacy-cards.js
 ```
 
 Then open http://localhost:8080.
