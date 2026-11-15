@@ -48,10 +48,22 @@ VITE_SERVER_URL=ws://localhost:3001
 | Variable              | Default               | Purpose |
 |-----------------------|-----------------------|---------|
 | `MYSQL_ROOT_PASSWORD` | `change-me-root`      | MySQL root password. |
-| `MYSQL_PASSWORD`      | `change-me`           | Password of the `kpl` database user. The server uses it too. |
+| `MYSQL_PASSWORD`      | `change-me`           | Password of the `kpl` database user. The server uses it too. Letters and digits only (see [Password rules](#password-rules)). |
 | `VITE_SERVER_URL`     | `ws://localhost:3001` | WebSocket address of the game server, as the player's browser sees it. |
 
 Always change the passwords before you deploy to a public server.
+
+### Password rules
+
+Use only letters and digits in `MYSQL_PASSWORD`. To generate a strong password:
+
+```sh
+openssl rand -hex 24
+```
+
+The server connects with the URL `mysql://kpl:<MYSQL_PASSWORD>@db:3306/kpl`, so the password becomes part of a URL. Characters such as `/`, `#`, `?`, `@`, `:` and `%` break the URL. The server then fails at startup with `P1001: Can't reach database server`, usually with a wrong host name. URL-encoding the password does not help, because the same variable also sets the password inside MySQL.
+
+Also avoid `$` in any value in `.env`. Docker Compose reads `$` as the start of a variable name.
 
 ### Important: `VITE_SERVER_URL` is set at build time
 
@@ -111,15 +123,37 @@ server {
 }
 ```
 
-Enable the site and get an HTTPS certificate:
+Enable the site:
 
 ```sh
 sudo ln -s /etc/nginx/sites-available/kpl.example.com /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx
-sudo certbot --nginx -d kpl.example.com
 ```
 
-Certbot adds the `listen 443 ssl` settings and an HTTP-to-HTTPS redirect to the file.
+Check that the site answers over both IPv4 and IPv6. Both commands must show the game's response, not a 404 or a different application:
+
+```sh
+curl -4 -I http://kpl.example.com/
+curl -6 -I http://kpl.example.com/
+```
+
+Get an HTTPS certificate with [Certbot](https://certbot.eff.org/). Test with a dry run first, then request the real certificate:
+
+```sh
+sudo certbot --nginx -d kpl.example.com --redirect --hsts --dry-run
+sudo certbot --nginx -d kpl.example.com --redirect --hsts
+```
+
+Certbot adds the `listen 443 ssl` settings to the file, and the options do the following:
+
+- `--redirect` adds an HTTP-to-HTTPS redirect.
+- `--hsts` tells browsers to always use HTTPS for this domain. Browsers remember this for a long time, so only use it when the domain will stay on HTTPS.
+
+Some options do not work with this setup:
+
+- `certonly` only gets the certificate and does not change the nginx configuration. Certbot then ignores `--redirect` and `--hsts`, and you must add the SSL settings yourself.
+- `-w` / `--webroot-path` is for the webroot method. The `--nginx` method ignores it.
+- `--staple-ocsp` has no use with Let's Encrypt, which stopped its OCSP service in 2025.
 
 Keep both `listen` lines. If the domain has an IPv6 (AAAA) DNS record, Let's Encrypt may check it over IPv6. Without `listen [::]:80`, IPv6 requests go to a different nginx site, and the certificate request fails with a 404 error. After certbot runs, check that the 443 block also has `listen [::]:443 ssl;`.
 
@@ -203,7 +237,10 @@ The container name comes from the folder name. Check it with `docker compose ps`
 ## Troubleshooting
 
 - **The page loads, but the game cannot connect.** Check that `VITE_SERVER_URL` points to an address the browser can reach, that it uses `wss://` when the page uses HTTPS, and that you rebuilt the client after changing it. The browser's developer console shows the WebSocket error.
-- **The server restarts again and again.** Run `docker compose logs server`. The most common cause is a wrong database password (see [Changing the database password later](#changing-the-database-password-later)).
+- **The server restarts again and again.** Run `docker compose logs server`.
+  - `P1001: Can't reach database server`, often with a wrong host name such as `kpl:3306` instead of `db:3306`: the password contains a character that breaks the database URL (see [Password rules](#password-rules)).
+  - `P1000: Authentication failed`: the password in `.env` does not match the password stored in the database (see [Changing the database password later](#changing-the-database-password-later)).
+- **The game page loads, but the WebSocket connection fails with error 502.** The reverse proxy cannot reach the game server. Check that the `server` container is running (`docker compose ps`) and that the proxy points to its port.
 - **No card decks appear when creating a room.** The database is empty. Run the card import (see [Quick start](#quick-start-local)).
 - **Players are disconnected after about a minute of inactivity.** The reverse proxy closes idle WebSocket connections. With nginx, set `proxy_read_timeout` (see [nginx](#nginx)).
 - **Port 8080 or 3001 is already in use.** Change the host-side port in `docker-compose.yml`, for example `"127.0.0.1:8081:80"`. If you change the server port, also update `VITE_SERVER_URL` (local use) or the proxy configuration.
