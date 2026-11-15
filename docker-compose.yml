@@ -24,8 +24,9 @@ services:
     environment:
       DATABASE_URL: mysql://kpl:${MYSQL_PASSWORD:-change-me}@db:3306/kpl
       SERVER_PORT: 3001
+    # Ports are bound to localhost only; use a reverse proxy for public access (see DEPLOYMENT.md)
     ports:
-      - "3001:3001"
+      - "127.0.0.1:3001:3001"
     # Keep stdin open so the admin CLI (motd, room list, player kick...) works via `docker attach`
     stdin_open: true
     tty: true
@@ -39,7 +40,7 @@ services:
     depends_on:
       - server
     ports:
-      - "8080:80"
+      - "127.0.0.1:8080:80"
 
 volumes:
   db-data:
