@@ -15,7 +15,7 @@
 		<slot />
 	</div>
 	<div class="layout-menu__footer">
-		<div>By <a href="https://sarahyzova.cz/" target="_blank">Sára Hýžová</a> with ❤️ and a lot of ☕</div>
+		<div>Based on the game by <a href="https://sarahyzova.cz/" target="_blank" rel="noopener noreferrer">Sára Hýžová</a></div>
 		<div>2018 - {yearNow}</div>
 	</div>
 </div>

@@ -1,5 +1,4 @@
 <script>
-  import AdBox from './AdBox.svelte';
   import ProfileEditor from './ProfileEditor.svelte';
   import ItemList from "../../components/layout/ItemList.svelte";
   import LayoutMenu from "../../components/layout/LayoutMenu.svelte";
@@ -120,7 +119,6 @@
       {:else}
         <AccountHome />
       {/if}
-      <AdBox />
     </div>
   </TwoColumns>
 </LayoutMenu>

@@ -7,8 +7,8 @@ RUN npm ci
 COPY . .
 
 # WebSocket URL of the backend as seen from the player's browser.
-# Vite bakes it into the bundle at build time. Required: without it the bundle
-# would fall back to a hard-coded upstream server.
+# Vite bakes it into the bundle at build time. Required: vite.config.ts also
+# refuses to build without it.
 ARG VITE_SERVER_URL
 RUN test -n "$VITE_SERVER_URL" || { echo "VITE_SERVER_URL build arg is required" >&2; exit 1; }
 ENV VITE_SERVER_URL=$VITE_SERVER_URL

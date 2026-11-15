@@ -16,7 +16,8 @@ export type AuthCredentials = {
 	user_token: string;
 };
 
-const SERVER_URL = cookie.get('server-ip') || import.meta.env.VITE_SERVER_URL || (import.meta.env.MODE === 'development' ? 'ws://localhost:3001' : 'wss://kpl-backend.by-sh.eu/');
+// Production builds require VITE_SERVER_URL (enforced in vite.config.ts).
+const SERVER_URL = cookie.get('server-ip') || import.meta.env.VITE_SERVER_URL || 'ws://localhost:3001';
 
 let connection: WebSocket | null = null;
 let authCredentials: AuthCredentials | null = null;

@@ -12,7 +12,5 @@ export async function getGoogleProfile(token: string): Promise<GoogleUser> {
 			Authorization: `Bearer ${token}`,
 		},
 	});
-	const data = await response.json();
-	console.log(data);
-	return data;
+	return response.json();
 }

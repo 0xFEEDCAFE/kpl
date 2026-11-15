@@ -1,6 +1,7 @@
 <script lang="ts">
   import ItemList from "../../components/layout/ItemList.svelte";
   import { LocalIdentity, logout } from "../../lib/auth/auth";
+  import { avatarFor } from "../../lib/avatar";
   import { autoFocus } from "../../use/auto-focus";
 
   export let username: string;
@@ -19,7 +20,7 @@
       <img
         class:provider--discord={$LocalIdentity.provider === 'discord'}
         class:provider--google={$LocalIdentity.provider === 'google'}
-        src={$LocalIdentity.image || `https://api.dicebear.com/9.x/dylan/svg?mood=happy,hopeful,superHappy&seed=${username}`}
+        src={$LocalIdentity.image || avatarFor(username)}
         alt="Profile"
         draggable="false"
         referrerpolicy="no-referrer"
