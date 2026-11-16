@@ -8,7 +8,7 @@ The game was originally created by Sára Hýžová. This repository is a persona
 
 - Public and private rooms, with a room browser and "join random room"
 - Room settings: player limit, point goal and card decks
-- Card decks stored in a database, including the original 2018 deck and the 2021 community extension
+- Card decks stored in a database and loaded from pack files, including the original 2018 deck and the 2021 community extension
 - In-game chat, sounds and a touchscreen-friendly hand for phones
 - Anonymous play, or login with Discord or Google
 - Admin console on the server: system message for all players, room and player management
@@ -54,8 +54,8 @@ The frontend and the backend communicate over a single WebSocket connection. The
 │   │   ├── cli/                Admin console commands
 │   │   └── database.ts         Prisma client
 │   ├── prisma/                 Database schema and migrations
-│   ├── legacy/                 Original card data (JSON) and the card import script
-│   ├── packs/                  Additional card packs (JSON), see packs/README.md
+│   ├── legacy/                 The card import script
+│   ├── packs/                  All card decks as pack files (JSON), see packs/README.md
 │   └── Dockerfile
 ├── docker-compose.yml          Runs the database, server and client together
 └── DEPLOYMENT.md               Deployment guide
@@ -96,7 +96,7 @@ The client's development build connects to `ws://localhost:3001`, so set `SERVER
 
 ```sh
 pnpm run migrate             # create the database tables
-pnpm run legacy-card-import  # load the card decks and packs/*.json (skips existing; add --force to replace them)
+pnpm run legacy-card-import  # load the card decks in packs/*.json (skips existing; add --force to replace them)
 pnpm run dev                 # start the server, restarts on file changes
 ```
 
@@ -113,6 +113,8 @@ Vite prints the local address of the app, usually http://localhost:5173.
 ## Adding a card pack
 
 A card pack is a JSON file in `server/packs/`. The import script loads every pack file in that folder into the database. The game shows the new pack in the deck selection when players create a room. You do not need to change any code.
+
+The two original decks are packs too: `kpl-original-2018.json` and `kpl-community-2021.json`. They are complete examples to copy.
 
 1. Create a file in `server/packs/`, for example `server/packs/my-pack.json`. Save it as UTF-8.
 

@@ -27,7 +27,6 @@ COPY --from=build /app/package.json ./
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/prisma ./prisma
-COPY --from=build /app/legacy/*.json ./legacy/
 COPY --from=build /app/packs ./packs
 
 # Files stay owned by root (read-only for the app); the server runs unprivileged.

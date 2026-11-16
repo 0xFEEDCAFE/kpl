@@ -1,13 +1,13 @@
 # Card packs
 
-Every `*.json` file in this directory is a card pack. The card import script loads all of them, together with the original decks in `legacy/`:
+Every `*.json` file in this directory is a card pack. The card import script loads all of them. The original decks are here too: `kpl-original-2018.json` and `kpl-community-2021.json`. To run the import:
 
 ```sh
 pnpm run legacy-card-import            # locally, from server/
 docker compose exec server node dist/legacy/inport-legacy-cards.js   # Docker (rebuild the image first)
 ```
 
-To import only some packs, pass their files or directories. Then the original decks and the other packs are not imported:
+To import only some packs, pass their files or directories. Then the other packs are not imported:
 
 ```sh
 pnpm run legacy-card-import packs/my-pack.json

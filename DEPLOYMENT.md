@@ -35,7 +35,7 @@ docker compose exec server node dist/legacy/inport-legacy-cards.js
 
 Then open http://localhost:8080.
 
-The second command loads the original card decks into the database. It is safe to run again: decks that already exist are skipped. To replace the existing decks with a fresh copy, for example after the card files change, add `--force`:
+The second command loads the card packs in `server/packs/` into the database, including the original decks. It is safe to run again: decks that already exist are skipped. To replace the existing decks with a fresh copy, for example after the card files change, add `--force`:
 
 ```sh
 docker compose exec server node dist/legacy/inport-legacy-cards.js --force
@@ -45,7 +45,7 @@ docker compose exec server node dist/legacy/inport-legacy-cards.js --force
 
 ### Adding card packs
 
-The import also loads every pack file in `server/packs/`. The file format is described in [server/packs/README.md](server/packs/README.md). After you add a file there, rebuild the image and run the import again:
+The import loads every pack file in `server/packs/`. The file format is described in [server/packs/README.md](server/packs/README.md). After you add a file there, rebuild the image and run the import again:
 
 ```sh
 docker compose up -d --build server

@@ -5,7 +5,7 @@ import { ensureDatabaseUrl } from '../src/database-url.js';
 
 // Usage: inport-legacy-cards [--force] [<pack.json | directory> ...]
 //
-// Without paths: imports the original (legacy) decks and every *.json pack in packs/.
+// Without paths: imports every *.json pack in packs/, including the original decks.
 // With paths: imports only the given pack files. A directory means every *.json file in it.
 // Paths are relative to the current directory (server/ locally, /app in Docker).
 //
@@ -17,21 +17,6 @@ const SYSTEM_OWNER = 'system';
 const PACKS_DIR = 'packs';
 // Card.text is VARCHAR(191) in the database
 const MAX_TEXT_LENGTH = 191;
-
-
-type LegacyBlackCard = {
-	id: number;
-	text: string;
-	pick: number;
-	source?: string;
-};
-
-type LegacyWhiteCard = {
-	id: number;
-	text: string;
-	source?: string;
-	tooltip?: string;
-};
 
 type CardImport = {
 	text: string;
@@ -48,21 +33,6 @@ type DeckImport = {
 }
 
 class PackError extends Error {}
-
-function convertLegacyBlackCard(legacyCard: LegacyBlackCard): CardImport {
-	return {
-		text: legacyCard.text,
-		pick: legacyCard.pick,
-	};
-}
-
-function convertLegacyWhiteCard(legacyCard: LegacyWhiteCard): CardImport {
-	return {
-		text: legacyCard.text,
-		tip: legacyCard.tooltip,
-		pick: 0,
-	};
-}
 
 function parseArgs(args: string[]): { force: boolean, paths: string[] } {
 	let force = false;
@@ -88,49 +58,6 @@ function readJson(file: string): unknown {
 	} catch (error) {
 		throw new PackError(`${file}: invalid JSON: ${(error as Error).message}`);
 	}
-}
-
-function loadLegacyDecks(): DeckImport[] {
-	const black_cards = readJson('legacy/black_cards.json') as LegacyBlackCard[];
-	const white_cards = readJson('legacy/white_cards.json') as LegacyWhiteCard[];
-
-	let packOriginal: CardImport[] = [];
-	let packOriginalCommunity: CardImport[] = [];
-
-	white_cards.forEach((card: LegacyWhiteCard) => {
-		const cardImport = convertLegacyWhiteCard(card);
-		if (card.source) {
-			packOriginalCommunity.push(cardImport);
-		} else {
-			packOriginal.push(cardImport);
-		}
-	});
-
-	black_cards.forEach((card: LegacyBlackCard) => {
-		const cardImport = convertLegacyBlackCard(card);
-		if (card.source) {
-			packOriginalCommunity.push(cardImport);
-		} else {
-			packOriginal.push(cardImport);
-		}
-	});
-
-	return [
-		{
-			name: 'KPL Online - Original (2018)',
-			description: 'Původní balíček karet použitý při prvním spuštění KPL Online v roce 2018',
-			default: true,
-			cards: packOriginal,
-			source: 'legacy/',
-		},
-		{
-			name: 'KPL Online - Community (2021)',
-			description: 'Rozšíření balíčku karet na základě návrhů komunity v roce 2021',
-			default: true,
-			cards: packOriginalCommunity,
-			source: 'legacy/',
-		},
-	];
 }
 
 function isObject(value: unknown): value is Record<string, unknown> {
@@ -244,15 +171,13 @@ function resolvePackFiles(paths: string[]): string[] {
 }
 
 function collectDecks(paths: string[]): DeckImport[] {
-	const decks: DeckImport[] = [];
 	if (paths.length === 0) {
-		decks.push(...loadLegacyDecks());
-		if (fs.existsSync(PACKS_DIR)) {
-			decks.push(...resolvePackFiles([PACKS_DIR]).map(parsePackFile));
+		if (!fs.existsSync(PACKS_DIR)) {
+			return [];
 		}
-	} else {
-		decks.push(...resolvePackFiles(paths).map(parsePackFile));
+		paths = [PACKS_DIR];
 	}
+	const decks = resolvePackFiles(paths).map(parsePackFile);
 
 	// Decks are matched by name, so two packs with one name would replace each other
 	const seen = new Map<string, string>();

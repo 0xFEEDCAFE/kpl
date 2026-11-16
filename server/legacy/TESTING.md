@@ -1,6 +1,6 @@
 # Testing the card import script
 
-This file describes the manual tests for `legacy/inport-legacy-cards.ts`, the script that imports the original decks and the card packs in `packs/`. The project has no automated tests, so run these tests by hand after you change the script.
+This file describes the manual tests for `legacy/inport-legacy-cards.ts`, the script that imports the card packs in `packs/`, including the two original decks. The project has no automated tests, so run these tests by hand after you change the script.
 
 The tests run in Docker against a separate, temporary MySQL container. They do not touch the database of the game.
 
@@ -12,7 +12,7 @@ The last run is recorded in [Results of the last run](#results-of-the-last-run).
 |------|----------------------|
 | Build | The server image builds, so the script compiles with `tsc`. |
 | Validation | Each kind of invalid pack file stops the import with a message that names the file and the card. The checks finish before the script connects to the database. |
-| Import | The original decks, a directory of packs, skipping existing decks, and replacing a deck with `--force`. |
+| Import | The default run with the original decks in `packs/`, a directory of packs, skipping existing decks, and replacing a deck with `--force`. |
 | Stored data | Deck fields, the `pick` value of black cards (explicit and computed from the blanks), tooltips, Czech characters and a file that starts with a UTF-8 BOM. |
 
 ## Setup
@@ -151,12 +151,12 @@ Run the tests in this order. Each one depends on the database state left by the 
 
 | # | Arguments | What it tests | Expected output |
 |---|-----------|---------------|-----------------|
-| I1 | *(none)* | Default run: the original decks plus `packs/`. The image's `packs/` contains only `README.md`, so no extra decks are imported. | `Importing 2 decks...`<br>`Imported "KPL Online - Original (2018)" (794 cards) from legacy/`<br>`Imported "KPL Online - Community (2021)" (222 cards) from legacy/`<br>`Done` |
+| I1 | *(none)* | Default run: every pack in `packs/`. The files are read in name order. | `Importing 2 decks...`<br>`Imported "KPL Online - Community (2021)" (222 cards) from packs/kpl-community-2021.json`<br>`Imported "KPL Online - Original (2018)" (794 cards) from packs/kpl-original-2018.json`<br>`Done` |
 | I2 | `/test/good` | A directory of packs, including a file with a BOM | `Importing 2 decks...`<br>`Imported "Test A" (5 cards) from /test/good/a.json`<br>`Imported "Test B" (1 card) from /test/good/b.json`<br>`Done` |
 | I3 | `/test/good` | Decks that already exist are skipped | `Skipped "Test A": already imported (use --force to replace it)`<br>`Skipped "Test B": already imported (use --force to replace it)` |
 | I4 | `--force /test/good/a.json` | `--force` replaces one deck and leaves the others alone | `Importing 1 deck...`<br>`Removed 1 existing copy of "Test A"`<br>`Imported "Test A" (5 cards) from /test/good/a.json`<br>`Done` |
 
-If the `packs/` directory contains pack files when you build the image, I1 imports them too, and the output has more lines.
+The expected output assumes that `packs/` contains only the two original packs when you build the image. Each additional pack file adds a line to I1 and moves the deck ids below.
 
 ### Check the stored data
 
@@ -179,8 +179,8 @@ Expected decks:
 
 | id | name | description | public | default |
 |----|------|-------------|--------|---------|
-| 1 | KPL Online - Original (2018) | Původní balíček karet použitý při prvním spuštění KPL Online v roce 2018 | 1 | 1 |
-| 2 | KPL Online - Community (2021) | Rozšíření balíčku karet na základě návrhů komunity v roce 2021 | 1 | 1 |
+| 1 | KPL Online - Community (2021) | Rozšíření balíčku karet na základě návrhů komunity v roce 2021 | 1 | 1 |
+| 2 | KPL Online - Original (2018) | Původní balíček karet použitý při prvním spuštění KPL Online v roce 2018 | 1 | 1 |
 | 4 | Test B | NULL | 1 | 0 |
 | 5 | Test A | Testovací balíček | 1 | 1 |
 
@@ -221,7 +221,8 @@ These parts were not tested:
 ## Results of the last run
 
 - **Date:** 2026-11-16
-- **Code:** commit `32b3c16` with the uncommitted changes that added `packs/` support to the script
+- **Code:** commit `faee85a` with the uncommitted changes that moved the original decks from `legacy/*.json` to `packs/kpl-original-2018.json` and `packs/kpl-community-2021.json`
 - **Steps:** the steps in this file, run in PowerShell 7 on Windows 11 with Docker Desktop
-- **Result:** the build and all tests (V1–V11, I1–I4, stored data) passed. The outputs matched the expected results above.
+- **Result:** the build and all tests (V1–V11, I1–I4, stored data) passed. The outputs matched the expected results above. A second run without arguments after I4 printed `Skipped` for both original decks.
+- **Migration check:** before the legacy code was removed, the old import (from `legacy/*.json`) and an import of only the two new pack files were run into two empty databases. The decks (name, description, `public`, `default`) and all 1016 cards (`pick`, text as `HEX(text)`, `tip`), sorted, were byte-identical in both. This includes the 12 cards with `\r\n` and black cards 30 and 109, which keep `pick` 2 without blanks.
 - **Not run:** the `sh` command that creates `5-long.json`. The file was created with the PowerShell command.
