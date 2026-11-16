@@ -54,7 +54,8 @@ The frontend and the backend communicate over a single WebSocket connection. The
 │   │   ├── cli/                Admin console commands
 │   │   └── database.ts         Prisma client
 │   ├── prisma/                 Database schema and migrations
-│   ├── legacy/                 Original card data (JSON) and its import script
+│   ├── legacy/                 Original card data (JSON) and the card import script
+│   ├── packs/                  Additional card packs (JSON), see packs/README.md
 │   └── Dockerfile
 ├── docker-compose.yml          Runs the database, server and client together
 └── DEPLOYMENT.md               Deployment guide
@@ -95,7 +96,7 @@ The client's development build connects to `ws://localhost:3001`, so set `SERVER
 
 ```sh
 pnpm run migrate             # create the database tables
-pnpm run legacy-card-import  # load the card decks (skips existing; add --force to replace them)
+pnpm run legacy-card-import  # load the card decks and packs/*.json (skips existing; add --force to replace them)
 pnpm run dev                 # start the server, restarts on file changes
 ```
 
@@ -108,6 +109,58 @@ npm run dev
 ```
 
 Vite prints the local address of the app, usually http://localhost:5173.
+
+## Adding a card pack
+
+A card pack is a JSON file in `server/packs/`. The import script loads every pack file in that folder into the database. The game shows the new pack in the deck selection when players create a room. You do not need to change any code.
+
+1. Create a file in `server/packs/`, for example `server/packs/my-pack.json`. Save it as UTF-8.
+
+2. Write the pack:
+
+   ```json
+   {
+     "name": "Můj balíček",
+     "description": "Krátký popis balíčku",
+     "black": [
+       "Proč v noci nemůžu spát?",
+       "A jako další trik vytáhnu ___ z ___."
+     ],
+     "white": [
+       "Rasismus",
+       { "text": "Hořící člověk", "tip": "Nápověda, která se ukáže u karty" }
+     ]
+   }
+   ```
+
+   - `name` is required. Players see it, and the import uses it to find the deck again. Every pack needs a different name.
+   - Black cards are the questions. Write each blank as `___`. A black card with two blanks needs two white cards as the answer.
+   - White cards are the answers. Add a `tip` when a card needs an explanation.
+   - A card's text can have at most 191 characters.
+   - Add `"default": true` to also use the pack in rooms made by "join random room".
+
+   See [server/packs/README.md](server/packs/README.md) for all the fields.
+
+3. Import the pack.
+
+   With Docker, rebuild the server image, because the image contains the pack files, and then run the import:
+
+   ```sh
+   docker compose up -d --build server
+   docker compose exec server node dist/legacy/inport-legacy-cards.js
+   ```
+
+   Without Docker, run this in `server/`:
+
+   ```sh
+   pnpm run legacy-card-import
+   ```
+
+   The script prints each imported pack. Packs that are already in the database are skipped. If the script finds an error in a file, it prints the file name and the card position, and changes nothing in the database.
+
+4. To change a pack later, edit its file, rebuild the image (with Docker), and run the import with `--force`. This replaces the decks that are already in the database with the versions from the files. Do this when nobody is playing: a room that is waiting to start with the old version of the pack gets no cards from it.
+
+   To remove a pack, deleting its file is not enough. The deck stays in the database until you delete it there.
 
 ## History
 
