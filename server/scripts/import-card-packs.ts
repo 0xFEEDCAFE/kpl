@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { ensureDatabaseUrl } from '../src/database-url.js';
 
-// Usage: inport-legacy-cards [--force] [<pack.json | directory> ...]
+// Usage: import-card-packs [--force] [<pack.json | directory> ...]
 //
 // Without paths: imports every *.json pack in packs/, including the original decks.
 // With paths: imports only the given pack files. A directory means every *.json file in it.
@@ -12,7 +12,7 @@ import { ensureDatabaseUrl } from '../src/database-url.js';
 // Without --force, decks that already exist are skipped.
 // With --force, existing decks are deleted (with their cards) and imported again.
 // A deck is identified by its name. The pack file format is described in packs/README.md.
-const USAGE = 'Usage: inport-legacy-cards [--force] [<pack.json | directory> ...]';
+const USAGE = 'Usage: import-card-packs [--force] [<pack.json | directory> ...]';
 const SYSTEM_OWNER = 'system';
 const PACKS_DIR = 'packs';
 // Card.text is VARCHAR(191) in the database

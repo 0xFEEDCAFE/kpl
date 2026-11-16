@@ -1,6 +1,6 @@
 # Testing the card import script
 
-This file describes the manual tests for `legacy/inport-legacy-cards.ts`, the script that imports the card packs in `packs/`, including the two original decks. The project has no automated tests, so run these tests by hand after you change the script.
+This file describes the manual tests for `scripts/import-card-packs.ts`, the script that imports the card packs in `packs/`, including the two original decks. The project has no automated tests, so run these tests by hand after you change the script.
 
 The tests run in Docker against a separate, temporary MySQL container. They do not touch the database of the game.
 
@@ -91,7 +91,7 @@ These tests run without a network (`--network none`), so the script cannot reach
 Run each file on its own:
 
 ```sh
-docker run --rm --network none -v "$PWD/test-packs:/test:ro" kpl-server-packtest node dist/legacy/inport-legacy-cards.js /test/bad/1-invalid-json.json
+docker run --rm --network none -v "$PWD/test-packs:/test:ro" kpl-server-packtest node dist/scripts/import-card-packs.js /test/bad/1-invalid-json.json
 ```
 
 Replace the file name for each test. For test V9, pass two files: `/test/good/a.json /test/bad/9-dup-name.json`.
@@ -144,7 +144,7 @@ Expected result: `All migrations have been successfully applied.`
 All tests use this command, followed by the arguments in the table:
 
 ```sh
-docker run --rm --network kpl-packtest-net -e MYSQL_PASSWORD=testpw -e MYSQL_HOST=kpl-packtest-db -v "$PWD/test-packs:/test:ro" kpl-server-packtest node dist/legacy/inport-legacy-cards.js
+docker run --rm --network kpl-packtest-net -e MYSQL_PASSWORD=testpw -e MYSQL_HOST=kpl-packtest-db -v "$PWD/test-packs:/test:ro" kpl-server-packtest node dist/scripts/import-card-packs.js
 ```
 
 Run the tests in this order. Each one depends on the database state left by the one before it. All of them must exit with code 0.
@@ -213,7 +213,7 @@ Then delete the `test-packs/` directory.
 
 These parts were not tested:
 
-- **Running without Docker** (`pnpm run legacy-card-import`). It runs the same code with `tsx` instead of the compiled JavaScript.
+- **Running without Docker** (`pnpm run card-import`, or its alias `pnpm run legacy-card-import`). It runs the same code with `tsx` instead of the compiled JavaScript.
 - **The Docker Compose commands in DEPLOYMENT.md**: rebuilding the `server` service, and copying a single pack into the running container with `docker compose cp`.
 - **Characters outside the Basic Multilingual Plane** (for example emoji) in the 191-character check. The script counts code points, as MySQL does. Test V5 uses `ž`, which is one unit in both counts, so it does not show the difference.
 - **The game itself**: that an imported pack appears in the deck selection and that its cards are dealt in a game.

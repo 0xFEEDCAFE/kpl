@@ -30,15 +30,15 @@ First create the `.env` file (see [Configuration](#configuration)). Docker Compo
 
 ```sh
 docker compose up -d --build
-docker compose exec server node dist/legacy/inport-legacy-cards.js
+docker compose exec server node dist/scripts/import-card-packs.js
 ```
 
 Then open http://localhost:8080.
 
-The second command loads the card packs in `server/packs/` into the database, including the original decks. It is safe to run again: decks that already exist are skipped. To replace the existing decks with a fresh copy, for example after the card files change, add `--force`:
+The second command loads the card packs in `server/packs/` into the database, including the original decks. Older versions ran the import with `node dist/legacy/inport-legacy-cards.js`. That path no longer exists. It is safe to run again: decks that already exist are skipped. To replace the existing decks with a fresh copy, for example after the card files change, add `--force`:
 
 ```sh
-docker compose exec server node dist/legacy/inport-legacy-cards.js --force
+docker compose exec server node dist/scripts/import-card-packs.js --force
 ```
 
 `--force` deletes the imported decks with all their cards and imports them again. This also removes duplicate copies made by older versions of the import. Decks created by players are not touched. Run it when nobody is playing: the new decks get new ids, so a room that selected the old decks but has not started its game yet finds no cards in them.
@@ -49,14 +49,14 @@ The import loads every pack file in `server/packs/`. The file format is describe
 
 ```sh
 docker compose up -d --build server
-docker compose exec server node dist/legacy/inport-legacy-cards.js
+docker compose exec server node dist/scripts/import-card-packs.js
 ```
 
 To import a single pack file without rebuilding, copy it into the container and pass its path. Only that pack is imported:
 
 ```sh
 docker compose cp my-pack.json server:/tmp/my-pack.json
-docker compose exec server node dist/legacy/inport-legacy-cards.js /tmp/my-pack.json
+docker compose exec server node dist/scripts/import-card-packs.js /tmp/my-pack.json
 ```
 
 A pack imported this way is in the database only. Keep the file, because you need it to import the pack again, for example after you restore the database.

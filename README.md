@@ -54,7 +54,7 @@ The frontend and the backend communicate over a single WebSocket connection. The
 │   │   ├── cli/                Admin console commands
 │   │   └── database.ts         Prisma client
 │   ├── prisma/                 Database schema and migrations
-│   ├── legacy/                 The card import script
+│   ├── scripts/                The card import script and its manual tests
 │   ├── packs/                  All card decks as pack files (JSON), see packs/README.md
 │   └── Dockerfile
 ├── docker-compose.yml          Runs the database, server and client together
@@ -67,7 +67,7 @@ The easiest way to run the game is Docker Compose:
 
 ```sh
 docker compose up -d --build
-docker compose exec server node dist/legacy/inport-legacy-cards.js
+docker compose exec server node dist/scripts/import-card-packs.js
 ```
 
 Then open http://localhost:8080.
@@ -96,7 +96,7 @@ The client's development build connects to `ws://localhost:3001`, so set `SERVER
 
 ```sh
 pnpm run migrate             # create the database tables
-pnpm run legacy-card-import  # load the card decks in packs/*.json (skips existing; add --force to replace them)
+pnpm run card-import         # load the card decks in packs/*.json (skips existing; add --force to replace them)
 pnpm run dev                 # start the server, restarts on file changes
 ```
 
@@ -149,13 +149,13 @@ The two original decks are packs too: `kpl-original-2018.json` and `kpl-communit
 
    ```sh
    docker compose up -d --build server
-   docker compose exec server node dist/legacy/inport-legacy-cards.js
+   docker compose exec server node dist/scripts/import-card-packs.js
    ```
 
    Without Docker, run this in `server/`:
 
    ```sh
-   pnpm run legacy-card-import
+   pnpm run card-import
    ```
 
    The script prints each imported pack. Packs that are already in the database are skipped. If the script finds an error in a file, it prints the file name and the card position, and changes nothing in the database.
